@@ -1,0 +1,15 @@
+# Compiled binaries
+lcs_sequential
+lcs_mpi
+lcs_cuda
+
+# Object files
+*.o
+
+# Benchmark output (keep the directory structure via README files if needed)
+results/*.csv
+results/*.png
+
+# Temporary files
+*.tmp
+*~
