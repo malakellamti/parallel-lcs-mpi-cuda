@@ -55,6 +55,7 @@ parallel-lcs-mpi-cuda/
 ├── results/
 │   ├── benchmark.csv
 │   ├── benchmark_summary.csv
+│   ├── cuda_kernel_comparison.png
 │   ├── runtime_comparison.png
 │   └── speedup_comparison.png
 ├── .gitignore
