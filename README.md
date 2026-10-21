@@ -349,7 +349,7 @@ python3 scripts/analyze_benchmarks.py
 - [x] Clean build and test workflow
 - [ ] Extended scalability evaluation
 - [ ] Further optimization of MPI communication and CUDA kernel launches
-- [ ] Technical report
+- [x] Technical report
 
 ## Reproducibility
 
