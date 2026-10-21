@@ -82,8 +82,6 @@ parallel-lcs-mpi-cuda/
 - A compatible NVIDIA GPU and driver
 - A C++ host compiler supported by the installed CUDA Toolkit
 
-The development environment used for this project includes WSL2 with Ubuntu, CUDA Toolkit 12.9, Open MPI 5.0.10, and `g++-14` as the CUDA host compiler.
-
 ### Benchmark analysis
 
 Python 3 and Matplotlib are required to generate the benchmark analysis and plots.
@@ -93,6 +91,8 @@ Install Matplotlib if necessary:
 ```bash
 python3 -m pip install matplotlib
 ```
+
+The development environment used for this project includes WSL2 with Ubuntu, CUDA Toolkit 12.9, Open MPI 5.0.10, and `g++-14` as the CUDA host compiler.
 
 ## Build
 
@@ -127,9 +127,7 @@ The generated executables are `lcs_sequential`, `lcs_mpi`, and `lcs_cuda`.
 
 ## Usage
 
-Each executable accepts two input strings.
-Each input sequence is limited to 10,000 characters. Actual performance and
-memory requirements depend on the input sizes and the implementation used.
+Each executable accepts two input strings. Each input sequence is limited to 10,000 characters. Actual performance and memory requirements depend on the input sizes and the implementation used.
 
 ### Sequential C
 
@@ -151,7 +149,7 @@ mpirun -n 4 ./lcs_mpi ABCBDAB BDCABA
 ./lcs_cuda ABCBDAB BDCABA
 ```
 
-For the example above, each implementation should report an LCS length of `4`. The actual subsequence may differ when multiple longest subsequences are valid.
+For the example above, each implementation should report an LCS length of 4. The actual subsequence may differ when multiple longest subsequences are valid.
 
 Run an executable without arguments to display its usage instructions.
 
@@ -192,29 +190,35 @@ These tests provide practical correctness checks but do not constitute an exhaus
 
 The sequential implementation constructs a two-dimensional dynamic programming table.
 
-For input strings \(X\) and \(Y\), the recurrence is:
+For input strings `X` and `Y`, `DP[i][j]` represents the LCS length of the first `i` characters of `X` and the first `j` characters of `Y`.
 
-\[
-DP[i][j]=
-\begin{cases}
-0 & \text{if } i=0 \text{ or } j=0\\
-DP[i-1][j-1]+1 & \text{if } X_i=Y_j\\
-\max(DP[i-1][j],DP[i][j-1]) & \text{otherwise}
-\end{cases}
-\]
+The recurrence is:
+
+1. If `i = 0` or `j = 0`:
+
+   `DP[i][j] = 0`
+
+2. If `X[i-1] == Y[j-1]`:
+
+   `DP[i][j] = DP[i-1][j-1] + 1`
+
+3. Otherwise:
+
+   `DP[i][j] = max(DP[i-1][j], DP[i][j-1])`
 
 The final table entry contains the LCS length. The implementation then traverses the table backward to reconstruct one valid subsequence.
 
-- Time complexity: \(O(mn)\)
-- Space complexity: \(O(mn)\)
+- **Time complexity:** `O(mn)`
+- **Space complexity:** `O(mn)`
 
-Here, \(m\) and \(n\) are the lengths of the input strings.
+Here, `m` and `n` are the lengths of the input strings.
 
 ### MPI distributed computation
 
 The MPI implementation uses anti-diagonal wavefront computation. Cells on an anti-diagonal depend on cells from earlier diagonals, allowing the current diagonal's work to be distributed across processes.
 
-The implementation uses `MPI_Allreduce` to share diagonal values between processes before advancing to the next diagonal.
+The implementation uses `MPI_All
+`MPI_Allreduce` to share diagonal values between processes before advancing to the next diagonal.
 
 After the distributed computation determines the LCS length, rank 0 reconstructs a valid subsequence using a sequential dynamic programming table.
 
@@ -296,15 +300,13 @@ These findings reflect the current algorithms, workload sizes, and tested enviro
 
 ![CUDA kernel comparison](results/cuda_kernel_comparison.png)
 
-Speedup is calculated as:
+Speedup is calculated by dividing the sequential mean runtime by the mean runtime of the implementation being evaluated:
 
-\[
-\text{Speedup}=
-\frac{\text{Sequential mean runtime}}
-{\text{Implementation mean runtime}}
-\]
+`Speedup = Sequential mean runtime / Implementation mean runtime`
 
-A value greater than 1 indicates that an implementation was faster than the sequential baseline; a value below 1 indicates that it was slower.
+- **Speedup greater than 1:** The implementation was faster than the sequential baseline.
+- **Speedup equal to 1:** Both had the same runtime.
+- **Speedup below 1:** The implementation was slower than the sequential baseline.
 
 To regenerate the analysis and plots, run:
 
