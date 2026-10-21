@@ -8,7 +8,7 @@ An implementation and performance study of the Longest Common Subsequence (LCS) 
 - [x] Automated tests for sequential and MPI implementations
 - [x] MPI distributed LCS length calculation
 - [ ] CUDA implementation
-- [ ] Benchmarking and performance analysis
+- [x] Benchmarking and performance analysis
 - [ ] Technical report
 
 ## Problem
