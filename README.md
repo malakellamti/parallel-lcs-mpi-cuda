@@ -1,42 +1,35 @@
-# Parallel Longest Common Subsequence (LCS): C, MPI and CUDA
+# Parallel LCS: Sequential C, MPI, and CUDA
 
-A comparative implementation of the Longest Common Subsequence (LCS) problem using sequential C, distributed-memory parallelism with MPI, and GPU parallelism with CUDA.
+Implementations and performance evaluation of the **Longest Common Subsequence (LCS)** problem using sequential C, MPI-based distributed computation, and CUDA-based GPU computation.
 
-The project explores algorithm design, parallel computation, correctness testing, benchmarking, and performance analysis.
+This project compares three approaches to the same dynamic programming problem, with automated correctness tests, reproducible benchmarks, and performance visualizations.
 
-## Project status
+## Overview
 
-- [x] Sequential C implementation
-- [x] Automated sequential tests
-- [x] MPI implementation using anti-diagonal wavefront computation
-- [x] Automated MPI tests
-- [x] CUDA implementation using anti-diagonal wavefront computation
-- [x] Automated CUDA tests
-- [x] Reproducible benchmark scripts
-- [x] Performance analysis and plots
-- [ ] Extended scalability evaluation
-- [ ] Technical report
+The Longest Common Subsequence problem finds the longest sequence of characters that appears in two input strings in the same relative order, without requiring the characters to be contiguous.
 
-## 1. Problem description
+For example, given `ABCBDAB` and `BDCABA`, one valid longest common subsequence is `BCBA`, with length 4.
 
-The Longest Common Subsequence problem consists of finding the longest sequence of characters that appears in two input sequences in the same relative order. Characters do not need to be contiguous.
+This repository contains three implementations:
 
-For example, given:
+- **Sequential C:** Dynamic programming baseline.
+- **MPI:** Anti-diagonal wavefront computation distributed across MPI processes.
+- **CUDA:** Anti-diagonal wavefront computation using GPU threads.
 
-- Sequence 1: `ABCBDAB`
-- Sequence 2: `BDCABA`
+The project explores the benefits and limitations of parallel computation by comparing execution times and validating results across implementations.
 
-One valid longest common subsequence is `BCBA`, with length 4.
+## Project Objectives
 
-The project implements the same problem using three approaches:
+- Implement LCS using sequential dynamic programming.
+- Distribute computations across MPI processes.
+- Implement GPU-based computation using CUDA.
+- Validate implementations through automated tests.
+- Compare end-to-end execution times across implementations.
+- Measure CUDA kernel execution time separately.
+- Generate benchmark summaries and performance plots.
+- Document experimental results and implementation limitations.
 
-1. **Sequential C:** a conventional dynamic programming algorithm.
-2. **MPI:** distributes dynamic programming cells across processes using an anti-diagonal wavefront.
-3. **CUDA:** computes dynamic programming cells in parallel on an NVIDIA GPU, one thread per cell on each anti-diagonal.
-
-All implementations calculate the LCS length and reconstruct one valid LCS.
-
-## 2. Repository structure
+## Repository Structure
 
 ```text
 parallel-lcs-mpi-cuda/
@@ -49,40 +42,66 @@ parallel-lcs-mpi-cuda/
 │   ├── test_mpi.sh
 │   └── test_cuda.sh
 ├── scripts/
-│   ├── benchmark.sh
 │   ├── benchmark.py
 │   └── analyze_benchmarks.py
 ├── results/
 │   ├── benchmark.csv
 │   ├── benchmark_summary.csv
-│   ├── cuda_kernel_comparison.png
 │   ├── runtime_comparison.png
-│   └── speedup_comparison.png
-├── .gitignore
+│   ├── speedup_comparison.png
+│   └── cuda_kernel_comparison.png
 ├── Makefile
-└── README.md
+├── README.md
+├── LICENSE
+└── .gitignore
 ```
 
-## 3. Requirements
+## Technologies
+
+- C
+- MPI (Message Passing Interface)
+- CUDA C++
+- GNU Make
+- Bash
+- Python 3
+- Matplotlib
+- Git and GitHub
+
+## Requirements
 
 ### Sequential and MPI implementations
 
-- GCC
-- Open MPI
+- GCC or a compatible C compiler
+- Open MPI or another compatible MPI implementation
 - GNU Make
 - Bash
 
 ### CUDA implementation
 
-- NVIDIA CUDA Toolkit with `nvcc`
+- NVIDIA CUDA Toolkit, including `nvcc`
 - A compatible NVIDIA GPU and driver
-- A host C++ compiler supported by the installed CUDA Toolkit
+- A C++ host compiler supported by the installed CUDA Toolkit
 
-The current development environment uses GCC for the sequential implementation, Open MPI for MPI, and `g++-14` as the CUDA host compiler.
+The development environment used for this project includes WSL2 with Ubuntu, CUDA Toolkit 12.9, Open MPI 5.0.10, and `g++-14` as the CUDA host compiler.
 
-Python 3 and Matplotlib are required to regenerate the benchmark analysis and plots.
+### Benchmark analysis
 
-## 4. Build
+Python 3 and Matplotlib are required to generate the benchmark analysis and plots.
+
+Install Matplotlib if necessary:
+
+```bash
+python3 -m pip install matplotlib
+```
+
+## Build
+
+Clone the repository and enter the project directory:
+
+```bash
+git clone https://github.com/malakellamti/parallel-lcs-mpi-cuda.git
+cd parallel-lcs-mpi-cuda
+```
 
 Build the sequential and MPI implementations:
 
@@ -96,7 +115,7 @@ Build the CUDA implementation:
 make cuda
 ```
 
-Build all three executables from a clean state:
+To rebuild all executables from a clean state:
 
 ```bash
 make clean
@@ -104,15 +123,13 @@ make all
 make cuda
 ```
 
-The generated executables are:
+The generated executables are `lcs_sequential`, `lcs_mpi`, and `lcs_cuda`.
 
-- `lcs_sequential`
-- `lcs_mpi`
-- `lcs_cuda`
+## Usage
 
-Compiled binaries are excluded from version control.
-
-## 5. Usage
+Each executable accepts two input strings.
+Each input sequence is limited to 10,000 characters. Actual performance and
+memory requirements depend on the input sizes and the implementation used.
 
 ### Sequential C
 
@@ -122,13 +139,7 @@ Compiled binaries are excluded from version control.
 
 ### MPI
 
-Run with two MPI processes:
-
-```bash
-mpirun -n 2 ./lcs_mpi ABCBDAB BDCABA
-```
-
-Run with four MPI processes:
+Run the program using four MPI processes:
 
 ```bash
 mpirun -n 4 ./lcs_mpi ABCBDAB BDCABA
@@ -140,21 +151,19 @@ mpirun -n 4 ./lcs_mpi ABCBDAB BDCABA
 ./lcs_cuda ABCBDAB BDCABA
 ```
 
-Each implementation should report an LCS length of 4 and a valid LCS, such as `BCBA`.
+For the example above, each implementation should report an LCS length of `4`. The actual subsequence may differ when multiple longest subsequences are valid.
 
-The implementations may reconstruct different valid subsequences when multiple optimal solutions exist.
+Run an executable without arguments to display its usage instructions.
 
-Each input sequence is limited to 10,000 characters by the current command-line implementations. Actual feasible input sizes also depend on available memory and execution time.
+## Automated Testing
 
-## 6. Automated testing
-
-Run all three test suites:
+Run all test suites:
 
 ```bash
 make test
 ```
 
-Or run them individually:
+Run individual suites:
 
 ```bash
 make test-sequential
@@ -162,97 +171,100 @@ make test-mpi
 make test-cuda
 ```
 
-The current test suites cover:
+The current test suites contain 22 test cases:
 
-- The classic LCS example
-- Identical sequences
-- Sequences with no common characters
-- An empty sequence
-- A single matching character
-- A sequence that is a subsequence of another
-- Inputs of different lengths
-- MPI execution with different process counts
+| Implementation | Test cases |
+|---|---:|
+| Sequential C | 7 |
+| MPI | 8 |
+| CUDA | 7 |
+| **Total** | **22** |
 
-**Current validation:** all 7 sequential tests, 8 MPI tests, and 7 CUDA tests pass in the development environment.
+The tests cover representative cases such as identical strings, no common characters, empty inputs, single-character matches, subsequence relationships, and inputs of different lengths.
 
-The tests verify the expected LCS lengths. They do not constitute exhaustive proof of correctness for every possible input.
+All 22 tests passed in the latest recorded clean build and test run. The benchmark script also verifies that the LCS lengths returned by the three implementations agree on generated inputs.
 
-## 7. Algorithm design
+These tests provide practical correctness checks but do not constitute an exhaustive proof of correctness.
 
-### 7.1 Sequential dynamic programming
+## Algorithm Design
 
-Let \(X\) and \(Y\) be the two input sequences. Define \(L(i,j)\) as the LCS length of their first \(i\) and \(j\) characters.
+### Sequential dynamic programming
 
-The recurrence is:
+The sequential implementation constructs a two-dimensional dynamic programming table.
+
+For input strings \(X\) and \(Y\), the recurrence is:
 
 \[
-L(i,j)=
+DP[i][j]=
 \begin{cases}
-0 & i=0 \text{ or } j=0\\
-L(i-1,j-1)+1 & X_i=Y_j\\
-\max(L(i-1,j),L(i,j-1)) & X_i\ne Y_j
+0 & \text{if } i=0 \text{ or } j=0\\
+DP[i-1][j-1]+1 & \text{if } X_i=Y_j\\
+\max(DP[i-1][j],DP[i][j-1]) & \text{otherwise}
 \end{cases}
 \]
 
-The full dynamic programming table is filled row by row, then traversed backwards to reconstruct one LCS.
+The final table entry contains the LCS length. The implementation then traverses the table backward to reconstruct one valid subsequence.
 
 - Time complexity: \(O(mn)\)
 - Space complexity: \(O(mn)\)
 
-Here, \(m\) and \(n\) are the sequence lengths.
+Here, \(m\) and \(n\) are the lengths of the input strings.
 
-### 7.2 MPI distributed computation
+### MPI distributed computation
 
-The MPI implementation processes the dynamic programming table by anti-diagonals. Cells on the same anti-diagonal can be computed concurrently once the required previous diagonals are available.
+The MPI implementation uses anti-diagonal wavefront computation. Cells on an anti-diagonal depend on cells from earlier diagonals, allowing the current diagonal's work to be distributed across processes.
 
-Each process computes a subset of the cells on the current anti-diagonal. `MPI_Allreduce` combines the local results so that all processes can access the values needed for the next step.
+The implementation uses `MPI_Allreduce` to share diagonal values between processes before advancing to the next diagonal.
 
-This approach demonstrates distributed computation but incurs communication overhead on every anti-diagonal.
+After the distributed computation determines the LCS length, rank 0 reconstructs a valid subsequence using a sequential dynamic programming table.
 
-The distributed phase calculates the LCS length. Rank 0 then performs a sequential dynamic programming pass to reconstruct the actual subsequence.
+The MPI timing reported by the program covers the distributed length calculation, not the subsequent sequential reconstruction. The benchmark's end-to-end timing includes the complete program execution.
 
-Consequently, the MPI implementation does not parallelize the complete end-to-end workflow. Its measured total runtime includes both distributed computation and sequential reconstruction.
+Collective communication at every diagonal can create substantial overhead, especially for small inputs.
 
-### 7.3 CUDA GPU computation
+### CUDA GPU computation
 
-The CUDA implementation also uses anti-diagonal wavefront computation.
+The CUDA implementation assigns GPU threads to cells on an anti-diagonal. It launches successive kernels to process diagonals in dependency order and maintains the previous diagonal values needed for the recurrence.
 
-For each anti-diagonal:
+The GPU calculates the LCS length, while the CPU reconstructs a valid subsequence using sequential dynamic programming.
 
-1. The host determines the valid range of cells.
-2. CUDA threads are launched to calculate those cells in parallel.
-3. The device rotates the buffers holding the previous two diagonals and the current diagonal.
-4. The process continues until the final diagonal has been calculated.
+CUDA event timing measures the diagonal kernel phase separately. It excludes costs such as program startup, memory allocation, data transfers, and CPU reconstruction.
 
-The LCS length is copied back from the GPU. A CPU dynamic programming pass then reconstructs one valid LCS for display.
+The need to launch a kernel for each diagonal can limit performance for relatively small workloads.
 
-The reported GPU computation time measures the diagonal-kernel phase using CUDA events. It excludes device allocation, host-to-device input copies, result transfer, and CPU reconstruction.
+## Benchmarking Methodology
 
-This timing is useful for examining GPU computation, but it is not directly equivalent to end-to-end program runtime.
+Generate benchmark measurements with:
 
-## 8. Benchmarking and performance analysis
+```bash
+python3 scripts/benchmark.py
+```
 
-The benchmark suite compares Sequential C, MPI, and CUDA using reproducibly generated DNA-like sequences over the alphabet `ACGT`.
+The benchmark uses reproducible, randomly generated DNA-like strings containing `A`, `C`, `G`, and `T`.
 
-### Methodology
+### Experimental configuration
 
-The benchmark script uses fixed random seeds to generate identical input pairs for every implementation at each sequence length. It tests lengths of 100, 250, 500, and 1,000 characters, with three measured repetitions per configuration.
+| Parameter | Configuration |
+|---|---|
+| Input lengths | 100, 250, 500, 1,000 |
+| MPI process counts | 1, 2, 4 |
+| Repetitions | 3 per configuration |
+| Total measured runs | 60 |
+| Correctness validation | LCS length compared against sequential C |
 
-The tested configurations are:
+CUDA is warmed up before the measured runs for each input size.
 
-- Sequential C, one process
-- MPI with 1, 2, and 4 processes
-- CUDA on the available NVIDIA GPU
+### Timing measurements
 
-The script checks that all implementations return the same LCS length. CUDA is warmed up before its measured runs.
+**End-to-end runtime:** Measured externally using Python's `time.perf_counter()`. This includes program invocation and startup overhead, computation, and reconstruction.
 
-End-to-end runtime is measured using Python's `time.perf_counter()` around each complete program invocation. These measurements include process startup and LCS reconstruction. CUDA end-to-end time also includes GPU initialization, memory allocation, and data transfers.
+**CUDA kernel runtime:** Measured using CUDA events around the diagonal kernel phase. It represents only part of the CUDA program's total execution time.
 
-CUDA kernel time is recorded separately using the timing reported by the CUDA program. It measures the diagonal-kernel phase and excludes memory allocation, input transfers, and CPU reconstruction. It must not be treated as equivalent to end-to-end runtime.
+The raw measurements are written to `results/benchmark.csv`. Summary statistics are written to `results/benchmark_summary.csv`.
 
-### Results
+## Results and Performance Analysis
 
-The following values are the mean end-to-end runtimes measured in the current experiment.
+The following table presents the mean end-to-end runtimes from the recorded benchmark run.
 
 | Input length | Sequential C | MPI (1 process) | MPI (2 processes) | MPI (4 processes) | CUDA |
 |---:|---:|---:|---:|---:|---:|
@@ -261,52 +273,85 @@ The following values are the mean end-to-end runtimes measured in the current ex
 | 500 | 0.001012 s | 0.242054 s | 0.252475 s | 0.255267 s | 0.201196 s |
 | 1,000 | 0.002297 s | 0.258155 s | 0.259593 s | 0.264009 s | 0.224144 s |
 
-For these input sizes, Sequential C was the fastest implementation. CUDA was faster than the tested MPI configurations in end-to-end runtime, but did not outperform the sequential baseline.
+### Key observations
 
-At length 1,000, the mean CUDA diagonal-kernel time was approximately 23.81 ms, while mean CUDA end-to-end runtime was approximately 224.14 ms. The difference illustrates why kernel-only timings and complete application timings must be reported separately.
+- **Sequential C was fastest** for every tested input size.
+- **CUDA was faster end-to-end than the tested MPI configurations**, but did not outperform the sequential implementation.
+- **Increasing the MPI process count did not improve end-to-end runtime** in these experiments. Communication overhead outweighed any benefit from distributing the work.
+- **CUDA kernel time was only part of total execution time.** At input length 1,000, mean kernel time was approximately 23.81 ms, compared with approximately 224.14 ms end-to-end.
 
-The MPI implementation performs a collective communication operation on every anti-diagonal and reconstructs the subsequence sequentially on rank 0. The CUDA implementation launches a kernel for each anti-diagonal and reconstructs the subsequence on the CPU. These design choices introduce overhead that can dominate the computation at the tested sizes.
+These findings reflect the current algorithms, workload sizes, and tested environment. They should not be interpreted as universal evidence that MPI or CUDA is inherently slower than sequential execution.
 
-These measurements describe this implementation and test environment only. They do not establish that CUDA or MPI is inherently slower than sequential computation. Larger workloads, optimized algorithms, and additional experiments are needed to assess scalability.
+### Performance visualizations
 
-### Benchmark artifacts
-
-The benchmark measurements are stored in `results/benchmark.csv`. Summary statistics are written to `results/benchmark_summary.csv`.
-
-The scripts can regenerate the measurements, summary statistics, and plots:
-
-```bash
-python3 scripts/benchmark.py
-python3 scripts/analyze_benchmarks.py
-```
-
-#### End-to-end runtime
+**End-to-end runtime**
 
 ![Runtime comparison](results/runtime_comparison.png)
 
-#### Speedup relative to Sequential C
+**Speedup relative to sequential C**
 
 ![Speedup comparison](results/speedup_comparison.png)
 
-#### CUDA kernel computation time
+**CUDA kernel execution time**
 
-![CUDA kernel timing](results/cuda_kernel_comparison.png)
+![CUDA kernel comparison](results/cuda_kernel_comparison.png)
 
-## 9. Limitations and future work
+Speedup is calculated as:
 
-Potential improvements include:
+\[
+\text{Speedup}=
+\frac{\text{Sequential mean runtime}}
+{\text{Implementation mean runtime}}
+\]
 
-- Extend automated tests with randomized inputs and cross-implementation comparisons.
-- Improve MPI communication efficiency and evaluate alternative work-distribution strategies.
-- Investigate CUDA approaches that reduce kernel-launch overhead.
-- Add CUDA to the benchmark harness and distinguish end-to-end runtime from GPU kernel time.
-- Evaluate larger input sizes and additional process counts.
-- Document the hardware and software environment for every performance experiment.
-- Complete a technical report describing implementation choices, correctness validation, experimental methodology, and results.
+A value greater than 1 indicates that an implementation was faster than the sequential baseline; a value below 1 indicates that it was slower.
 
-## 10. Reproducibility
+To regenerate the analysis and plots, run:
 
-To rebuild the executables and run the automated tests:
+```bash
+python3 scripts/analyze_benchmarks.py
+```
+
+## Limitations
+
+- The current benchmark covers input lengths up to 1,000 characters.
+- MPI experiments cover 1, 2, and 4 processes.
+- MPI communication occurs at every anti-diagonal.
+- CUDA launches a kernel for each anti-diagonal.
+- LCS reconstruction remains sequential in both parallel implementations.
+- Each configuration has three measured repetitions.
+- Performance results depend on the hardware, software environment, workload, and system load.
+
+## Future Work
+
+- Expand automated testing with randomized inputs and additional edge cases.
+- Evaluate larger input sizes and additional MPI process counts.
+- Investigate more efficient MPI communication and work-distribution strategies.
+- Explore CUDA approaches that reduce kernel-launch overhead.
+- Investigate parallel LCS reconstruction.
+- Compare alternative algorithms and optimizations.
+- Prepare a technical report documenting implementation decisions, validation, experimental methodology, and results.
+
+## Project Status
+
+- [x] Sequential C implementation
+- [x] MPI implementation using anti-diagonal wavefront computation
+- [x] CUDA implementation using anti-diagonal wavefront computation
+- [x] Automated tests for all three implementations
+- [x] Cross-implementation LCS length validation in the benchmark suite
+- [x] Reproducible benchmark generation
+- [x] Runtime and speedup analysis
+- [x] CUDA kernel timing analysis
+- [x] Benchmark results and visualization plots
+- [x] Build, usage, and testing documentation
+- [x] Clean build and test workflow
+- [ ] Extended scalability evaluation
+- [ ] Further optimization of MPI communication and CUDA kernel launches
+- [ ] Technical report
+
+## Reproducibility
+
+To rebuild the executables and run all automated tests:
 
 ```bash
 make clean
@@ -315,15 +360,15 @@ make cuda
 make test
 ```
 
-To regenerate the sequential and MPI benchmark measurements and their analysis:
+To regenerate the measurements and analysis:
 
 ```bash
 python3 scripts/benchmark.py
 python3 scripts/analyze_benchmarks.py
 ```
 
-Recorded benchmark files are retained in the repository so that the published results can be inspected without rerunning the experiments.
+The recorded benchmark files are included so that the current results can be inspected without rerunning the experiments.
 
 ## License
 
-No license has been specified yet. Add an appropriate license before explicitly permitting reuse or redistribution of this project.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
