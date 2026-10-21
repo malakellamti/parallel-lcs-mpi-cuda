@@ -19,3 +19,4 @@ results/*.png
 !results/benchmark_summary.csv
 !results/runtime_comparison.png
 !results/speedup_comparison.png
+!results/cuda_kernel_comparison.png

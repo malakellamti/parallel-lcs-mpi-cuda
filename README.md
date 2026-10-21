@@ -231,61 +231,65 @@ This timing is useful for examining GPU computation, but it is not directly equi
 
 ## 8. Benchmarking and performance analysis
 
-The repository includes scripts to run experiments and analyze the results.
+The benchmark suite compares Sequential C, MPI, and CUDA using reproducibly generated DNA-like sequences over the alphabet `ACGT`.
 
-### Reproduce the benchmarks
+### Methodology
 
-```bash
-python3 scripts/benchmark.py
-```
+The benchmark script uses fixed random seeds to generate identical input pairs for every implementation at each sequence length. It tests lengths of 100, 250, 500, and 1,000 characters, with three measured repetitions per configuration.
 
-The benchmark script generates deterministic DNA-like sequences over the alphabet `ACGT`, tests the sequential and MPI implementations, checks the resulting LCS lengths, and records elapsed wall-clock times.
+The tested configurations are:
 
-The current recorded experiment uses sequence lengths of 100, 250, 500, and 1,000 characters, with three repetitions per configuration. MPI runs use 1, 2, and 4 processes.
+- Sequential C, one process
+- MPI with 1, 2, and 4 processes
+- CUDA on the available NVIDIA GPU
 
-### Regenerate summary statistics and plots
+The script checks that all implementations return the same LCS length. CUDA is warmed up before its measured runs.
 
-```bash
-python3 scripts/analyze_benchmarks.py
-```
+End-to-end runtime is measured using Python's `time.perf_counter()` around each complete program invocation. These measurements include process startup and LCS reconstruction. CUDA end-to-end time also includes GPU initialization, memory allocation, and data transfers.
 
-The analysis script generates summary statistics and comparison plots from `results/benchmark.csv`.
+CUDA kernel time is recorded separately using the timing reported by the CUDA program. It measures the diagonal-kernel phase and excludes memory allocation, input transfers, and CPU reconstruction. It must not be treated as equivalent to end-to-end runtime.
 
-### Recorded results
+### Results
 
-In the recorded experiment, the sequential implementation outperformed the MPI implementation at every tested sequence length.
+The following values are the mean end-to-end runtimes measured in the current experiment.
 
-For sequences of length 1,000, the mean end-to-end runtimes were approximately:
+| Input length | Sequential C | MPI (1 process) | MPI (2 processes) | MPI (4 processes) | CUDA |
+|---:|---:|---:|---:|---:|---:|
+| 100 | 0.000576 s | 0.244971 s | 0.252494 s | 0.264593 s | 0.185573 s |
+| 250 | 0.000713 s | 0.245649 s | 0.272988 s | 0.276573 s | 0.216950 s |
+| 500 | 0.001012 s | 0.242054 s | 0.252475 s | 0.255267 s | 0.201196 s |
+| 1,000 | 0.002297 s | 0.258155 s | 0.259593 s | 0.264009 s | 0.224144 s |
 
-| Implementation | Processes | Mean runtime |
-|---|---:|---:|
-| Sequential C | 1 | 0.00375 s |
-| MPI | 1 | 0.25491 s |
-| MPI | 2 | 0.25787 s |
-| MPI | 4 | 0.26414 s |
+For these input sizes, Sequential C was the fastest implementation. CUDA was faster than the tested MPI configurations in end-to-end runtime, but did not outperform the sequential baseline.
 
-These measurements show no MPI speedup for the tested workload. Communication overhead, process startup, and sequential reconstruction outweigh the benefits of distributing this relatively small computation.
+At length 1,000, the mean CUDA diagonal-kernel time was approximately 23.81 ms, while mean CUDA end-to-end runtime was approximately 224.14 ms. The difference illustrates why kernel-only timings and complete application timings must be reported separately.
 
-The results are specific to the tested implementation, environment, input sizes, and repetition count. They should not be interpreted as a general comparison of MPI and sequential computation.
+The MPI implementation performs a collective communication operation on every anti-diagonal and reconstructs the subsequence sequentially on rank 0. The CUDA implementation launches a kernel for each anti-diagonal and reconstructs the subsequence on the CPU. These design choices introduce overhead that can dominate the computation at the tested sizes.
 
-**Important:** the recorded benchmark dataset currently covers sequential C and MPI, not CUDA. CUDA performance should be evaluated separately until the benchmark harness records CUDA end-to-end runtime and GPU kernel time consistently.
+These measurements describe this implementation and test environment only. They do not establish that CUDA or MPI is inherently slower than sequential computation. Larger workloads, optimized algorithms, and additional experiments are needed to assess scalability.
 
 ### Benchmark artifacts
 
-The repository includes:
+The benchmark measurements are stored in `results/benchmark.csv`. Summary statistics are written to `results/benchmark_summary.csv`.
 
-- `results/benchmark.csv` — recorded benchmark measurements
-- `results/benchmark_summary.csv` — summary statistics
-- `results/runtime_comparison.png` — runtime comparison plot
-- `results/speedup_comparison.png` — speedup comparison plot
+The scripts can regenerate the measurements, summary statistics, and plots:
 
-#### Runtime comparison
+```bash
+python3 scripts/benchmark.py
+python3 scripts/analyze_benchmarks.py
+```
+
+#### End-to-end runtime
 
 ![Runtime comparison](results/runtime_comparison.png)
 
-#### Speedup comparison
+#### Speedup relative to Sequential C
 
 ![Speedup comparison](results/speedup_comparison.png)
+
+#### CUDA kernel computation time
+
+![CUDA kernel timing](results/cuda_kernel_comparison.png)
 
 ## 9. Limitations and future work
 
