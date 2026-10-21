@@ -103,3 +103,49 @@ The project will compare correctness, execution time, speedup, and scalability a
 - GPU parallelism with CUDA
 - Benchmarking and performance analysis
 - Reproducible software development
+
+## Performance evaluation
+
+### Methodology
+
+The sequential C and MPI implementations were tested on reproducibly generated
+DNA-like sequences over the alphabet `ACGT`. Each input pair was tested three
+times at lengths of 100, 250, 500, and 1,000 characters.
+
+End-to-end runtime was measured using Python's high-resolution
+`time.perf_counter()`. MPI measurements include process startup and the
+program's sequential LCS reconstruction on rank 0. Consequently, these
+measurements represent total program runtime, not only the distributed
+calculation.
+
+### Results
+
+On the tested input sizes, sequential C was faster than the MPI implementation.
+For example, at a sequence length of 1,000, the mean measured runtimes were
+approximately:
+
+| Implementation | Mean runtime |
+|---|---:|
+| Sequential C | 0.00375 s |
+| MPI, 1 process | 0.25491 s |
+| MPI, 2 processes | 0.25787 s |
+| MPI, 4 processes | 0.26414 s |
+
+The MPI implementation did not demonstrate a speedup on these inputs.
+Communication on every anti-diagonal and MPI startup overhead outweigh the
+benefit of distributing the computation at these sizes. Increasing the process
+count also increased runtime slightly in this experiment.
+
+These results are limited to the tested implementation, environment, input
+sizes, and three repetitions per configuration. Larger inputs and further
+optimization are needed to evaluate scalability more fully.
+
+### Benchmark artifacts
+
+The `scripts/benchmark.py` script regenerates the measurements.
+The `scripts/analyze_benchmarks.py` script produces summary statistics and
+plots from the recorded CSV data.
+
+![Runtime comparison](results/runtime_comparison.png)
+
+![Speedup comparison](results/speedup_comparison.png)

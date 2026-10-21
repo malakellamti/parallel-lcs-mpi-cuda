@@ -13,3 +13,9 @@ results/*.png
 # Temporary files
 *.tmp
 *~
+
+# Selected reproducible benchmark artifacts
+!results/benchmark.csv
+!results/benchmark_summary.csv
+!results/runtime_comparison.png
+!results/speedup_comparison.png
